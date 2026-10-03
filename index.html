@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的信用卡回饋查詢小幫手</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-bg: #eff6ff;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --warning: #d97706;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-sub: #4b5563;
+            --border: #e5e7eb;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            padding: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0 10px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 1.1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .quick-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .tag {
+            background-color: #f1f5f9;
+            color: var(--text-sub);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .tag:hover {
+            background-color: #e2e8f0;
+            color: var(--primary);
+        }
+
+        .result-count {
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .result-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-card.best {
+            border: 2px solid var(--success);
+            background: var(--success-bg);
+        }
+
+        .badge-best {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--success);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .card-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .reward-rate {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #dc2626;
+        }
+
+        .plan-name {
+            display: inline-block;
+            background: var(--primary-bg);
+            color: var(--primary);
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .matched-store {
+            font-size: 0.95rem;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .notes {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            background: #ffffff;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border-left: 3px solid var(--warning);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-sub);
+        }
+
+        .all-cards-section {
+            display: none;
+        }
+
+        .card-group {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .card-group h3 {
+            border-bottom: 2px solid var(--primary-bg);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .rule-item {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .rule-title {
+            font-weight: bold;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>💳 刷卡回饋雷達</h1>
+        <p class="subtitle">輸入消費店家，列出所有適用卡片與方案列表！</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('search')">🔍 店家速查</button>
+        <button class="tab-btn" onclick="switchTab('all')">📋 完整卡片權益</button>
+    </div>
+
+    <!-- 分頁 1: 搜尋模式 -->
+    <div id="search-section">
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="例如：康是美、50嵐、海底撈、BicCamera..." oninput="doSearch()">
+        </div>
+
+        <div class="quick-tags">
+            <span class="tag" onclick="quickSearch('康是美')">💄 康是美</span>
+            <span class="tag" onclick="quickSearch('50嵐')">🥤 50嵐</span>
+            <span class="tag" onclick="quickSearch('海底撈')">🍲 海底撈</span>
+            <span class="tag" onclick="quickSearch('BicCamera')">📷 BicCamera</span>
+            <span class="tag" onclick="quickSearch('新光三越')">🛍 新光三越</span>
+            <span class="tag" onclick="quickSearch('日本')">🇯🇵 日本消費</span>
+            <span class="tag" onclick="quickSearch('momo')">📦 momo購物</span>
+            <span class="tag" onclick="quickSearch('蝦皮')">🛒 蝦皮</span>
+        </div>
+
+        <div id="resultsList"></div>
+    </div>
+
+    <!-- 分頁 2: 完整卡片權益模式 -->
+    <div id="all-section" class="all-cards-section">
+        <div id="allCardsContent"></div>
+    </div>
+
+    <script>
+        const rewardData = [
+            // --- 台新 GOGO 卡 ---
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 瘋聚會 (COCKTAIL)",
+                rate: 10.0,
+                stores: ["詹記麻辣火鍋", "萬客什鍋", "海底撈", "屋馬燒肉", "茶六燒肉堂", "新村站著吃", "燒肉政宗", "碳佐麻里", "雞湯大叔", "gonna共樂遊", "BRUN 不然", "CAFE ACME", "The Antipodean", "貳樓", "樂子 the Diner", "Fake Sober", "Draft Land", "臺虎精釀", "啜飲室", "ABV", "Bar TCRC", "Bar Home", "Phowa", "MOONROCK", "台灣代駕", "Motodomo 愛車管家"],
+                notes: "需於 Richart Life App 開放期間切換方案。最高 10%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 日常續命 (tapioca)",
+                rate: 10.0,
+                stores: ["50嵐", "得正", "五桐號", "龜記", "UG TEA", "叮哥茶飲", "CAFE!N", "%Arabica", "COMPOSE COFFEE"],
+                notes: "手搖飲/咖啡名店加碼。最高 10%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 約會犒賞 (dining)",
+                rate: 5.0,
+                stores: ["饗饗 INPARADISE", "NAGOMI"],
+                notes: "頂級吃到飽餐廳。最高 5%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 影音/追星 (movie/fandom2)",
+                rate: 5.0,
+                stores: ["WEVERSE", "K-MONSTAR", "微樂客", "五大唱片", "仙女樹", "FANME", "NOL", "巴哈姆特", "BOOK WALKER", "Animate", "樂天KOBO", "Readmoo讀墨", "Netflix", "Disney+", "愛爾達"],
+                notes: "娛樂/影音串流/漫畫圖書加碼。最高 5%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 數位外掛/健身/運動 (camera/gym/sneakers)",
+                rate: 5.0,
+                stores: ["Pinkoi", "好好生醫", "POPCARE好在乎", "營養師輕食", "VITABOX", "MYPROTEIN", "UrMart優馬選品", "Anytime Fitness", "健身工廠", "World Gym", "超核心 Hypercore", "KX PILATES", "虎鐵健身", "17FIT", "Adidas", "New Balance", "PUMA", "Onitsuka Tiger", "Nike", "HOKA", "Salomon", "lululemon"],
+                notes: "指定品牌最高 5%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Chill刷 - 數位外掛 3.3%",
+                rate: 3.3,
+                stores: ["Apple 直營", "Studio A", "Straight A", "DJI", "Insta360", "GoPro", "蝦皮", "淘寶", "酷澎", "Uber Eats"],
+                notes: "網購及 3C 名店最高 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Pay著刷 (台新Pay)",
+                rate: 3.8,
+                stores: ["台新Pay", "全家", "7-11", "7-11超商", "全家超商", "新光三越", "Richart Mart", "康是美", "IKEA", "NET", "神腦", "燦坤", "全國電子", "麥當勞", "美廉社", "大樹藥局"],
+                notes: "綁定 台新Pay 享 3.8%。（⚠️ 兩大超商實體卡直刷無回饋，限用台新Pay）"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "Pay著刷 (台新Pay+ 日韓跨境)",
+                rate: 3.8,
+                stores: ["LAWSON", "BicCamera", "GS25", "DAISO", "日本LAWSON", "日本BicCamera", "韓國GS25", "韓國DAISO"],
+                notes: "日韓交易享 3.8% 且免 1.5% 國外交易手續費！"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "天天刷 (藥妝藥局/採買/交通)",
+                rate: 3.3,
+                stores: ["康是美", "寶雅", "屈臣氏", "杏一醫療", "大樹藥局", "丁丁藥局", "佑全保健藥妝", "健康人生藥局", "萬家福", "樂家康", "大買家", "唐吉訶德", "LOPIA", "智生活", "臺鐵", "高鐵", "台灣大車隊", "LINEGO", "Yoxi", "Uber", "台灣Bolt", "中油直營", "全國加油", "源點EVOASIS", "EVALUE", "USPACE", "Autopass", "車麻吉"],
+                notes: "實體信用卡/一般刷卡享 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "行動支付 (LINE Pay / 全盈+Pay)",
+                rate: 2.3,
+                stores: ["LINE Pay", "全盈+Pay", "康是美", "寶雅", "屈臣氏"],
+                notes: "綁定 LINE Pay / 全盈+Pay 支付享 2.3%（注意：四大超商不適用加碼）"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "大筆刷",
+                rate: 3.3,
+                stores: ["新光三越", "遠東百貨", "遠東SOGO", "漢神巨蛋", "漢神百貨", "漢神洲際", "微風", "台北101", "遠東巨城", "廣三SOGO", "南紡購物中心", "誠品生活", "誠品線上", "京站", "三創生活", "夢時代", "統一時代", "DREAM PLAZA", "中友百貨", "LaLaport", "MITSUI OUTLET PARK", "華泰名品城", "SKM Park Outlets", "特力屋", "HOLA", "宜得利", "瑪黑家居", "UNIQLO", "GU", "ZARA"],
+                notes: "百貨 Outlet 居家時尚享 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "好饗刷",
+                rate: 3.3,
+                stores: ["全臺餐飲", "餐廳", "王品瘋Pay", "Foodpanda", "拓元售票", "KKTIX", "年代售票", "寬宏售票", "OPENTIX", "FunNow", "晶華酒店", "雲朗觀光", "萬豪酒店", "煙波大飯店", "老爺酒店", "福華飯店", "漢來飯店", "台北君悅酒店", "高雄洲際酒店", "臺中勤美洲際酒店", "礁溪寒沐酒店", "錢櫃", "好樂迪", "ONCOR", "sing!go", "享溫馨"],
+                notes: "全台餐飲/外送/飯店/KTV 享 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "數趣刷",
+                rate: 3.3,
+                stores: ["momo", "PChome", "Amazon", "東森", "博客來", "iHerb", "SHEIN", "Farfetch", "Olive Young", "知識衛星", "Amazing Talker", "Tutor ABC", "Hahow", "PressPlay", "MyCard", "遊戲橘子", "Steam", "PlayStation", "Nintendo", "ChatGPT", "Notion", "Canva", "Perplexity", "Claude"],
+                notes: "指定網購/線上課程/遊戲AI 享 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "玩旅刷",
+                rate: 3.3,
+                stores: ["海外消費", "Grab", "SUICA", "ICOCA", "PASMO", "WOWPASS", "AIRSIM", "中華航空", "長榮航空", "星宇航空", "台灣虎航", "國泰航空", "華信航空", "立榮航空", "樂桃航空", "阿聯酋航空", "亞洲航空", "酷航", "捷星航空", "新加坡航空", "日本航空", "越捷航空", "Klook", "KKday", "Agoda", "Booking.com", "Trip.com", "Airbnb", "Hotels.com", "Expedia", "雄獅旅遊", "易遊網", "東南旅遊", "可樂旅遊"],
+                notes: "海外實體/線上、機票、訂房、旅行社 享 3.3%"
+            },
+            {
+                card: "台新 GOGO 卡",
+                plan: "假日刷",
+                rate: 2.0,
+                stores: ["假日一般消費", "國定假日", "保費"],
+                notes: "行政院公告之國定例假日不限通路享 2%"
+            },
+
+            // --- 玉山熊本熊雙幣卡 ---
+            {
+                card: "玉山熊本熊雙幣卡",
+                plan: "指定日本商店 (好遊/熊好買/熊好吃/熊好玩)",
+                rate: 8.5,
+                stores: ["日本", "SUICA", "PASMO", "ICOCA", "TOYOTA Rent a Car", "Times Car Rental", "NIPPON RENT-A-CAR", "OTS租車", "ORIX租車", "Budget租車", "JR鐵路", "日本航空", "樂天旅遊", "東橫INN", "星野集團", "Prince Hotel", "BicCamera", "Yodobashi", "松本清", "唐吉軻德", "大國藥妝", "無印良品", "日本MITSUI", "LaLaport", "UNIQLO", "GU", "Montbell", "Alpen", "勝烈亭", "敘敘苑", "牛角", "力丸燒肉", "六歌仙燒肉", "shake shack", "DOUTOR Coffee", "Fuglen", "鳥貴族", "一蘭拉麵", "松屋", "SUKIYA", "壽司郎", "藏壽司", "人形町今半", "東京迪士尼樂園", "哈利波特影城", "日本環球影城", "USJ", "豪斯登堡", "九州非洲獅樂園", "名古屋樂高樂園", "吉伊卡哇樂園"],
+                notes: "含一般 2.5% + 加碼 6% (每期上限 500 元需登錄)。收取 1.5% 國外手續費（淨回饋約 7.0%）"
+            },
+            {
+                card: "玉山熊本熊雙幣卡",
+                plan: "綁定玉山Wallet PayPay",
+                rate: 5.0,
+                stores: ["PayPay", "日本PayPay"],
+                notes: "含PayPay 3.5% + 免 1.5% 手續費 (每季上限 100 元)。新臺幣直扣"
+            },
+            {
+                card: "玉山熊本熊雙幣卡",
+                plan: "日本一般消費",
+                rate: 2.5,
+                stores: ["日本實體", "日本網購"],
+                notes: "無上限，需收取 1.5% 國外交易服務費（淨回饋約 1.0%）"
+            },
+
+            // --- 富邦 J 卡 ---
+            {
+                card: "富邦 J 卡",
+                plan: "日韓泰消費",
+                rate: 3.0,
+                stores: ["日本", "韓國", "泰國"],
+                notes: "日本/韓國/泰國地區一般消費最高 3%"
+            },
+            {
+                card: "富邦 J 卡",
+                plan: "國內一般消費",
+                rate: 1.0,
+                stores: ["國內一般消費"],
+                notes: "一般消費 1% 回饋無上限"
+            },
+
+            // --- 富邦 MOMO 卡 ---
+            {
+                card: "富邦 MOMO 卡",
+                plan: "momo 通路",
+                rate: 3.0,
+                stores: ["momo", "momo購物網"],
+                notes: "享最高 3% mo幣回饋"
+            },
+            {
+                card: "富邦 MOMO 卡",
+                plan: "國內一般與海外",
+                rate: 1.0,
+                stores: ["國內一般消費", "海外消費"],
+                notes: "1% 現金回饋無上限"
+            },
+
+            // --- 中信 LINE Pay 卡 ---
+            {
+                card: "中信 LINE Pay 卡",
+                plan: "國外實體商店",
+                rate: 2.8,
+                stores: ["國外實體", "海外實體", "日本實體", "韓國實體"],
+                notes: "須為面對面實體刷卡 (含 Apple/Google Pay)，不含網路及條碼支付"
+            },
+            {
+                card: "中信 LINE Pay 卡",
+                plan: "國內外一般消費",
+                rate: 1.0,
+                stores: ["一般消費"],
+                notes: "1% LINE POINTS 回饋"
+            }
+        ];
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            if (tab === 'search') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('search-section').style.display = 'block';
+                document.getElementById('all-section').style.display = 'none';
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('search-section').style.display = 'none';
+                document.getElementById('all-section').style.display = 'block';
+                renderAllCards();
+            }
+        }
+
+        function doSearch() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const resultsContainer = document.getElementById('resultsList');
+
+            if (!query) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>👆 請在上方輸入框鍵入店家名稱，或點擊快捷標籤</p>
+                    </div>`;
+                return;
+            }
+
+            let matches = [];
+
+            rewardData.forEach(item => {
+                const matchStore = item.stores.find(s => s.toLowerCase().includes(query));
+                if (matchStore || item.plan.toLowerCase().includes(query) || item.card.toLowerCase().includes(query)) {
+                    matches.push({
+                        ...item,
+                        matchedName: matchStore || query
+                    });
+                }
+            });
+
+            // 按回饋率降序排列（最高回饋在最上方）
+            matches.sort((a, b) => b.rate - a.rate);
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>❓ 找不到「<b>${query}</b>」的專屬加碼通路</p>
+                        <p style="font-size:0.85rem; margin-top:8px;">可以參考一般消費預估：<br>
+                        • 台新 GOGO 卡 假日刷 (2%)<br>
+                        • 中信 LINE Pay 卡 / 富邦 MOMO 卡 / 富邦 J 卡 一般消費 (1%)</p>
+                    </div>`;
+                return;
+            }
+
+            let html = `<div class="result-count">共找到 ${matches.length} 個適用方案（已依回饋率由高至低排序）：</div>`;
+            
+            matches.forEach((item, index) => {
+                const isBest = index === 0;
+                html += `
+                    <div class="result-card ${isBest ? 'best' : ''}">
+                        ${isBest ? '<div class="badge-best">👑 首選推薦</div>' : ''}
+                        <div class="card-header">
+                            <span class="card-name">${item.card}</span>
+                            <span class="reward-rate">${item.rate}%</span>
+                        </div>
+                        <div class="plan-name">${item.plan}</div>
+                        <div class="matched-store">🎯 適用通路/條件：<b>${item.matchedName}</b></div>
+                        <div class="notes">💡 說明：${item.notes}</div>
+                    </div>
+                `;
+            });
+
+            resultsContainer.innerHTML = html;
+        }
+
+        function quickSearch(keyword) {
+            document.getElementById('searchInput').value = keyword;
+            doSearch();
+        }
+
+        function renderAllCards() {
+            const container = document.getElementById('allCardsContent');
+            const grouped = {};
+
+            rewardData.forEach(item => {
+                if (!grouped[item.card]) grouped[item.card] = [];
+                grouped[item.card].push(item);
+            });
+
+            let html = '';
+            for (let card in grouped) {
+                html += `<div class="card-group"><h3>💳 ${card}</h3>`;
+                grouped[card].forEach(rule => {
+                    html += `
+                        <div class="rule-item">
+                            <div class="rule-title">${rule.plan} ➜ <span style="color:#dc2626; font-weight:bold;">${rule.rate}%</span></div>
+                            <div style="color:var(--text-sub); font-size:0.85rem; margin-top:2px;">${rule.notes}</div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+            container.innerHTML = html;
+        }
+
+        // 預設載入
+        doSearch();
+    </script>
+</body>
+</html>
